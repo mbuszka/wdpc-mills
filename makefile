@@ -1,12 +1,12 @@
 CC=gcc
-CFLAGS=-I$(IDIR)
+CFLAGS=-I$(IDIR) `pkg-config gtk+-3.0 --cflags` -Wall -Wextra
 
 IDIR = headers
 ODIR = obj
 LDIR = lib
 SDIR = src
 
-LIBS=
+LIBS=`pkg-config gtk+-3.0 --libs`
 
 _DEPS = utils.h mills.h gui.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
