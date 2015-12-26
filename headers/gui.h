@@ -1,0 +1,1 @@
+GtkApplication *init_app();
