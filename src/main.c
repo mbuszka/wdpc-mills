@@ -2,15 +2,14 @@
 #include "gui.h"
 
 
-GtkApplication *app;
+GObject *window;
 
 int main (int argc, char **argv)
 {
-  int status;
-  app = init_app();
-  status = g_application_run (G_APPLICATION (app), argc, argv);
+  gtk_init (&argc, &argv);
+  init_app();
   
-  g_object_unref (app);
-
-  return status;
+  gtk_main();
+  
+  return 0;
 }

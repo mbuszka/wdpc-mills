@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-I$(IDIR) `pkg-config gtk+-3.0 --cflags` -Wall -Wextra
+CFLAGS=-I$(IDIR) `pkg-config gtk+-3.0 --cflags` -Wall -Wextra -rdynamic
 
 IDIR = headers
 ODIR = obj
