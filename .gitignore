@@ -31,5 +31,8 @@
 # Debug files
 *.dSYM/
 
+# Temporary ui files
+*.ui~
+
 # Compiled executable
 mills

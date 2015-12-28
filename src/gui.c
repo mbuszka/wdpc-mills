@@ -19,9 +19,15 @@ static void switch_view(GtkWidget *new_view)
   current_view = new_view;
 }
 
-void return_to_main_menu(GtkWidget *btn, gpointer data)
+void switch_to_main_menu(GtkWidget *btn, gpointer data)
 {
   switch_view(main_menu_view);
+  return;
+}
+
+void switch_to_game_session(GtkWidget *btn, gpointer data)
+{
+  switch_view(game_session_view);
   return;
 }
 

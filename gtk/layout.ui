@@ -25,6 +25,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <signal name="clicked" handler="switch_to_game_session" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -123,7 +124,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
-                    <signal name="clicked" handler="return_to_main_menu" swapped="no"/>
+                    <signal name="clicked" handler="switch_to_main_menu" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
