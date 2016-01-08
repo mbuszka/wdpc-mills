@@ -81,13 +81,14 @@
           </packing>
         </child>
         <child>
-          <object class="GtkGrid" id="game_session">
+          <placeholder/>
+        </child>
+        <child>
+          <object class="GtkBox" id="game_session">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="row_homogeneous">True</property>
-            <property name="column_homogeneous">True</property>
             <child>
-              <object class="GtkBox" id="box1">
+              <object class="GtkBox" id="game_buttons">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
@@ -134,26 +135,19 @@
                 </child>
               </object>
               <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkDrawingArea" id="game_canvas">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="top_attach">0</property>
-                <property name="width">3</property>
-              </packing>
+              <placeholder/>
             </child>
           </object>
           <packing>
-            <property name="name">page1</property>
-            <property name="title" translatable="yes">page1</property>
-            <property name="position">1</property>
+            <property name="name">game_session</property>
+            <property name="title" translatable="yes">game_session</property>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>
