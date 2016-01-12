@@ -8,9 +8,10 @@ int main (int argc, char **argv)
 {
   gtk_init (&argc, &argv);
   init_app();
+  game_state = init_state();
   
   gtk_main();
-  game_state = init_state();
+  
   
   return 0;
 }

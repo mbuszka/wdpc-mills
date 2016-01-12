@@ -19,6 +19,7 @@ typedef struct {
   Mill      mills[16];
   short int links[24][4];
   short int men_count[2];
+  short int available_men[2];
   Phase     phase;
 } GameState;
 

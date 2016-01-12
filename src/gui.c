@@ -20,6 +20,8 @@ static GtkWidget *board_tiles[24];
 static GtkWidget *background_tiles[25];
 static GtkWidget *game_area;
 static GtkWidget *current_player_label;
+static GtkWidget *player_1_men_count_label;
+static GtkWidget *player_2_men_count_label;
 
 static void switch_view(GtkWidget *new_view)
 {
@@ -47,20 +49,35 @@ void switch_to_game_session(GtkWidget *btn, gpointer data)
 
 void handle_board_click(GtkWidget *btn, gpointer data)
 {
+  static bool waiting_for_drop = false;
+  static short int drag_source;
   int idx=0;
+  
   for (;idx<24; idx++) {
     if (btn == board_tiles[idx]) break;
   }
   if (idx>=24) printf("error didnt find right board tile");
-  // GtkWidget *img = gtk_bin_get_child(GTK_BIN (board_tiles[idx]));
+  
+  if (same_colour(game_state.current_player, game_state.board[idx])) {
+    waiting_for_drop = true;
+    drag_source = idx;
+    return;
+  }
+    
   Action a = { Add, idx, idx };
-  if (is_valid_action(game_state, a)) {
-    game_state = update_game_state(game_state, a);
+  if (waiting_for_drop) {
+    a.action_type = Move;
+    a.source = drag_source;
+    a.destination = idx;
+    waiting_for_drop = false;
+    g_print("moving!\n");
+  } else if (game_state.board[idx] == Empty) {
+    a.action_type = Add;
   } else {
     a.action_type = Remove;
-    if (is_valid_action(game_state, a)) {
-      game_state = update_game_state(game_state, a);
-    }
+  }
+  if (is_valid_action(game_state, a)) {
+    game_state = update_game_state(game_state, a);
   }
   draw_game_state(game_state);
   return;
@@ -87,6 +104,12 @@ void build_game_area()
   int tile_ctr=0; int bgr_ctr=0;
   
   current_player_label = gtk_label_new("Player 1");
+  player_1_men_count_label = gtk_label_new("Player 1 men left: ");
+  player_2_men_count_label = gtk_label_new("Player 2 men left: ");
+  GtkWidget *scorebox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_box_set_homogeneous(GTK_BOX(scorebox), TRUE);
+  gtk_box_pack_end(GTK_BOX(scorebox), player_2_men_count_label, TRUE, TRUE, 0);
+  gtk_box_pack_start(GTK_BOX(scorebox), player_1_men_count_label, TRUE, TRUE, 0);
   gtk_grid_attach(GTK_GRID (grid), current_player_label, 0, 0, 7, 1);
   
   for (int i=0; i<7; i++) {
@@ -110,6 +133,7 @@ void build_game_area()
   for (int i=0; i<7; i++) {
     gtk_grid_attach(GTK_GRID (grid), i%3 == 0 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 7, 1, 1);
   }
+  gtk_grid_attach(GTK_GRID (grid), scorebox, 0, 8, 7, 1);
   game_area = grid;
   return;
 }
@@ -125,6 +149,11 @@ void set_tile_image(short int tile, Point p)
 
 void draw_game_state(GameState state)
 {
+  char msg1[50], msg2[50];
+  sprintf(msg1, "Player 1 men left: %d", state.available_men[0]-state.men_count[0]);
+  sprintf(msg2, "Player 2 men left: %d", state.available_men[1]-state.men_count[1]);
+  gtk_label_set_label(GTK_LABEL(player_1_men_count_label), msg1);
+  gtk_label_set_label(GTK_LABEL(player_2_men_count_label), msg2);
   for (int i=0; i<24; i++) {
     set_tile_image(i, state.board[i]);
   }
@@ -145,5 +174,11 @@ void init_app()
   game_session_view = GTK_WIDGET (gtk_builder_get_object(builder, GAME_SESSION_NAME));
   switch_view(main_menu_view);
   
+  return;
+}
+
+void signal_error(char *msg)
+{
+  g_print("%s\n", msg);
   return;
 }
