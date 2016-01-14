@@ -4,6 +4,8 @@
 #define MAIN_MENU_NAME "main_menu"
 #define GAME_SESSION_NAME "game_session"
 #define VIEW_STACK_NAME "view_stack"
+#define PLAYER_WHITE_NAME "Red"
+#define PLAYER_BLACK_NAME "Blue"
 
 void build_game_area();
 void set_label(Player p);
@@ -22,6 +24,7 @@ static GtkWidget *game_area;
 static GtkWidget *current_player_label;
 static GtkWidget *player_1_men_count_label;
 static GtkWidget *player_2_men_count_label;
+static GtkWidget *phase_indicator;
 
 static void switch_view(GtkWidget *new_view)
 {
@@ -85,7 +88,7 @@ void handle_board_click(GtkWidget *btn, gpointer data)
   
 void set_label(Player p)
 {
-  gtk_label_set_label(GTK_LABEL(current_player_label), p == PlayerWhite ? "Player 1" : "Player 2");
+  gtk_label_set_label(GTK_LABEL(current_player_label), p == PlayerWhite ? PLAYER_WHITE_NAME : PLAYER_BLACK_NAME);
   return;
 }
 
@@ -103,14 +106,19 @@ void build_game_area()
   }
   int tile_ctr=0; int bgr_ctr=0;
   
-  current_player_label = gtk_label_new("Player 1");
-  player_1_men_count_label = gtk_label_new("Player 1 men left: ");
-  player_2_men_count_label = gtk_label_new("Player 2 men left: ");
+  current_player_label = gtk_label_new(PLAYER_WHITE_NAME);
+  player_1_men_count_label = gtk_label_new("Men left: ");
+  player_2_men_count_label = gtk_label_new("Men left: ");
+  phase_indicator = gtk_label_new("Phase 1");
   GtkWidget *scorebox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+  GtkWidget *infobox  = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_set_homogeneous(GTK_BOX(scorebox), TRUE);
+  gtk_box_set_homogeneous(GTK_BOX(infobox), TRUE);
   gtk_box_pack_end(GTK_BOX(scorebox), player_2_men_count_label, TRUE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX(scorebox), player_1_men_count_label, TRUE, TRUE, 0);
-  gtk_grid_attach(GTK_GRID (grid), current_player_label, 0, 0, 7, 1);
+  gtk_box_pack_start(GTK_BOX(infobox), current_player_label, TRUE, TRUE, 0);
+  gtk_box_pack_end(GTK_BOX(infobox), phase_indicator, TRUE, TRUE, 0);
+  gtk_grid_attach(GTK_GRID (grid), infobox, 0, 0, 7, 1);
   
   for (int i=0; i<7; i++) {
     gtk_grid_attach(GTK_GRID (grid), i%3 == 0 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 1, 1, 1);
@@ -149,11 +157,13 @@ void set_tile_image(short int tile, Point p)
 
 void draw_game_state(GameState state)
 {
-  char msg1[50], msg2[50];
-  sprintf(msg1, "Player 1 men left: %d", state.available_men[0]-state.men_count[0]);
-  sprintf(msg2, "Player 2 men left: %d", state.available_men[1]-state.men_count[1]);
+  char msg1[50], msg2[50], phase[20];
+  sprintf(msg1, "Player %s men left: %d", PLAYER_WHITE_NAME, state.available_men[0]-state.men_count[0]);
+  sprintf(msg2, "Player %s men left: %d", PLAYER_BLACK_NAME, state.available_men[1]-state.men_count[1]);
+  sprintf(phase, "Phase %d", state.phase + 1);
   gtk_label_set_label(GTK_LABEL(player_1_men_count_label), msg1);
   gtk_label_set_label(GTK_LABEL(player_2_men_count_label), msg2);
+  gtk_label_set_label(GTK_LABEL(phase_indicator), phase);
   for (int i=0; i<24; i++) {
     set_tile_image(i, state.board[i]);
   }
