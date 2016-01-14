@@ -1,6 +1,7 @@
 #include"gui.h"
 #include <stdlib.h>
 
+#define HISTORY_SIZE 100
 #define opponents_color(player) (player == PlayerBlack ? White : Black)
 #define in_mill(p, state) (state.mills[mills_to_check[p][0]] != None || state.mills[mills_to_check[p][1]] != None)
 #define other_player(state) (state.current_player == PlayerWhite ? PlayerBlack : PlayerWhite)
@@ -22,12 +23,23 @@ static short int points_in_mill[16][3] = {{0,1,2},    {3,4,5},    {6,7,8},    {9
                                           {16,19,22}, {8,12,17},  {5,13,20},  {2,14,23}};
 
 extern GameState game_state;
+static GameState game_history[HISTORY_SIZE];
+static int history_head = 0;
+static int history_count = 0;
 
 GameState update_mill(GameState state, short int mill);
 GameState update_mills(GameState state, short int dest);
 bool is_mill_created(GameState old_state, GameState new_state, short int dest);
 bool is_neighbour(GameState state, short int source, short int destination);
-bool is_finished(GameState state, Player *winner);
+bool is_finished(GameState state, Player **winner);
+bool check_history_for_repeats();
+
+void add_to_history(GameState state)
+{
+  game_history[history_head] = state;
+  history_head = (history_head + 1) % HISTORY_SIZE;
+  history_count++;
+}
 
 GameState update_game_state(GameState old_state, Action action)
 { 
@@ -83,9 +95,11 @@ GameState update_game_state(GameState old_state, Action action)
   if (switch_player)
     new_state.current_player = other_player(new_state);
   
-  Player p; char msg[50];
+  add_to_history(new_state);
+  Player *p = malloc(sizeof(Player)); char msg[50];
   if (is_finished(new_state, &p)) {
-    sprintf(msg, "Game won by player %s", p == PlayerWhite ? PLAYER_WHITE_NAME : PLAYER_BLACK_NAME);
+    if (p == NULL) sprintf(msg, "Draw");
+    else sprintf(msg, "Game won by player %s", *p == PlayerWhite ? PLAYER_WHITE_NAME : PLAYER_BLACK_NAME);
     signal_error(msg);
   }
   return new_state;
@@ -105,18 +119,22 @@ bool has_legal_moves(GameState state, Player p)
   return false;
 }
 
-bool is_finished(GameState state, Player *winner)
+bool is_finished(GameState state, Player **winner)
 {
   if (state.available_men[0] == 2) {
-    *winner = PlayerBlack; return true;
+    **winner = PlayerBlack; return true;
   } else if (state.available_men[1] == 2) {
-    *winner = PlayerWhite; return true;
+    **winner = PlayerWhite; return true;
   } else {
     if (!has_legal_moves(state, PlayerWhite)) {
-      *winner = PlayerBlack;
+      **winner = PlayerBlack;
       return true;
     } else if (!has_legal_moves(state, PlayerBlack)) {
-      *winner = PlayerWhite;
+      **winner = PlayerWhite;
+      return true;
+    }
+    if (check_history_for_repeats()) {
+      *winner = NULL;
       return true;
     }
   }
@@ -138,6 +156,34 @@ bool is_valid_action(GameState state, Action action)
                         break;
   }
   return valid;
+}
+
+bool check_history_for_repeats()
+{
+  int n = (history_count < HISTORY_SIZE ? history_count : HISTORY_SIZE);
+  int repeats[n];
+  for (int i=0; i<n; i++) repeats[i] = 1;
+  g_print("checking history for repeats\n");
+  for (int i=0; i<n; i++) {
+    bool same = true;
+    for (int j=i+1; j<n; j++) {
+      for (int k=0; k<24; k++) {
+        same = game_history[i].board[k] == game_history[j].board[k];
+        if (!same) break;
+      }
+      if (same) {
+        repeats[i]++;
+        repeats[j]++;
+      }
+    }
+    g_print("repeats for %d: %d\n", i, repeats[i]);
+    if (repeats[i] >= 3) {
+      g_print("found repeat\n");
+      return true;
+    }
+  }
+  g_print("none found\n");
+  return false;
 }
 
 bool is_neighbour(GameState state, short int source, short int destination)
@@ -168,7 +214,7 @@ GameState update_mill(GameState state, short int mill)
   else {
     state.mills[mill] = None;
   }
-  g_print("no mill nr %d", mill);
+  g_print("no mill nr %d\n", mill);
   return state;
 }
 
