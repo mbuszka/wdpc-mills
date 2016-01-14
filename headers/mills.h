@@ -21,10 +21,13 @@ typedef struct {
   short int men_count[2];
   short int available_men[2];
   Phase     phase;
+  bool      mill_created;
 } GameState;
 
 GameState update_game_state(GameState old_state, Action action); // assumes action is valid
 bool is_valid_action(GameState state, Action action);
 GameState init_state();
+bool is_finished(GameState state, Player **winner);
+void clean_state();
 
 

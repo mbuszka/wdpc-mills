@@ -41,67 +41,67 @@ void add_to_history(GameState state)
   history_count++;
 }
 
+void clean_state()
+{
+  game_state = init_state();
+  history_head = 0;
+  history_count = 0;
+}
+
 GameState update_game_state(GameState old_state, Action action)
 { 
   GameState new_state = old_state;
-  static bool mill_created = false;
-  bool switch_player = true;
+  
   switch (action.action_type) {
-  case Move : if (mill_created) break;
-              new_state.board[action.source] = Empty;
+  case Move : new_state.board[action.source] = Empty;
               new_state.board[action.destination] = new_state.current_player == PlayerWhite ? White : Black;
               new_state = update_mills(new_state, action.source);
               new_state = update_mills(new_state, action.destination);
-              mill_created = is_mill_created(old_state, new_state, action.destination);
+              new_state.mill_created = is_mill_created(old_state, new_state, action.destination);
               break;
               
-  case Add  : if (mill_created) break;
-              new_state.board[action.destination] = new_state.current_player == PlayerWhite ? White : Black;
+  case Add  : new_state.board[action.destination] = new_state.current_player == PlayerWhite ? White : Black;
               new_state = update_mills(new_state, action.destination);
               new_state.men_count[new_state.current_player]++;
-              mill_created = is_mill_created(old_state, new_state, action.destination);
+              new_state.mill_created = is_mill_created(old_state, new_state, action.destination);
               break;
               
-  case Remove : if (!mill_created) {switch_player = false; break;}
-                if (in_mill(action.source, new_state)) {signal_error("This point is in mill, cant remove"); switch_player = false; break;}
-                new_state.board[action.source] = Empty;
+  case Remove : new_state.board[action.source] = Empty;
                 new_state = update_mills(new_state, action.source);
                 new_state.men_count[other_player(new_state)]--;
                 new_state.available_men[other_player(new_state)]--;
-                mill_created = false;
+                new_state.mill_created = false;
                 break;
   }
-  if (mill_created) {
+  
+  if (new_state.mill_created) {
+    bool can_remove = false;
     for (int i=0; i<24; i++) {
       if ((new_state.board[i] == opponents_color(new_state.current_player)) &&
                                 (!in_mill(i,new_state))) {
-        switch_player = false;
+        can_remove = true;
         break;
       }
     }
-    if (switch_player) mill_created = false;
-  }
+    if (!can_remove) {
+      new_state.mill_created = false;
+      new_state.current_player = other_player(new_state);
+    }
+  } else new_state.current_player = other_player(new_state);
+  
   if (new_state.phase == Phase1 &&
       new_state.available_men[0] == new_state.men_count[0] && 
-      new_state.available_men[1] == new_state.men_count[1]
-      /*new_state.men_count[0] > 1*/) {
-        signal_error("Phase 2");
+      new_state.available_men[1] == new_state.men_count[1]) {
+        g_print("Phase 2");
         new_state.phase = Phase2;
-      }
+  }
   
-  if (new_state.phase == Phase2 && (new_state.available_men[0] == 3 || new_state.available_men[1] == 3))
+  if (new_state.phase == Phase2 && (new_state.available_men[0] == 3 || 
+      new_state.available_men[1] == 3)) {
     new_state.phase = Phase3;
-  
-  if (switch_player)
-    new_state.current_player = other_player(new_state);
+  }
   
   add_to_history(new_state);
-  Player *p = malloc(sizeof(Player)); char msg[50];
-  if (is_finished(new_state, &p)) {
-    if (p == NULL) sprintf(msg, "Draw");
-    else sprintf(msg, "Game won by player %s", *p == PlayerWhite ? PLAYER_WHITE_NAME : PLAYER_BLACK_NAME);
-    signal_error(msg);
-  }
   return new_state;
 }
 
@@ -121,21 +121,23 @@ bool has_legal_moves(GameState state, Player p)
 
 bool is_finished(GameState state, Player **winner)
 {
-  if (state.available_men[0] == 2) {
-    **winner = PlayerBlack; return true;
-  } else if (state.available_men[1] == 2) {
-    **winner = PlayerWhite; return true;
-  } else {
-    if (!has_legal_moves(state, PlayerWhite)) {
-      **winner = PlayerBlack;
-      return true;
-    } else if (!has_legal_moves(state, PlayerBlack)) {
-      **winner = PlayerWhite;
-      return true;
-    }
-    if (check_history_for_repeats()) {
-      *winner = NULL;
-      return true;
+  if (state.phase >= Phase2) {
+    if (state.available_men[0] == 2) {
+      **winner = PlayerBlack; return true;
+    } else if (state.available_men[1] == 2) {
+      **winner = PlayerWhite; return true;
+    } else {
+      if (!has_legal_moves(state, PlayerWhite)) {
+        **winner = PlayerBlack;
+        return true;
+      } else if (!has_legal_moves(state, PlayerBlack)) {
+        **winner = PlayerWhite;
+        return true;
+      }
+      if (check_history_for_repeats()) {
+        *winner = NULL;
+        return true;
+      }
     }
   }
   return false;
@@ -146,13 +148,17 @@ bool is_valid_action(GameState state, Action action)
   bool valid = true;
   Player cur_plr = state.current_player;
   switch (action.action_type) {
-  case Move :   valid = ((state.phase == Phase3 && state.men_count[state.board[action.source] == White ? PlayerWhite : PlayerBlack] == 3) || 
+  case Move :   valid = !state.mill_created &&
+                        ((state.phase == Phase3 && state.men_count[state.board[action.source] == White ? PlayerWhite : PlayerBlack] == 3) || 
                         (state.phase >= Phase2 && is_neighbour(state, action.source, action.destination)))
                         && state.board[action.destination] == Empty; break;
-  case Add :    valid = state.phase == Phase1 && state.board[action.destination] == Empty 
+  case Add :    valid = !state.mill_created &&
+                        state.phase == Phase1 && state.board[action.destination] == Empty 
                         && state.available_men[cur_plr] > state.men_count[cur_plr]; break;
-  case Remove : valid = state.board[action.source] == 
-                        (state.current_player == PlayerWhite ? Black : White);
+  case Remove : valid = state.mill_created &&
+                        state.board[action.source] == 
+                        (state.current_player == PlayerWhite ? Black : White) &&
+                        !in_mill(action.source, state);
                         break;
   }
   return valid;
@@ -229,7 +235,7 @@ bool is_mill_created(GameState old_state, GameState new_state, short int dest)
 
 GameState init_state()
 {
-  GameState state = { PlayerWhite, { Empty }, { None }, LINKS, {0,0}, { 4, 4 }, Phase1};
+  GameState state = { PlayerWhite, { Empty }, { None }, LINKS, {0,0}, { 4, 4 }, Phase1, false};
   
   return state;
 }

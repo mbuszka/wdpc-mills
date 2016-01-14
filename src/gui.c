@@ -1,5 +1,6 @@
 #include <gtk/gtk.h>
 #include "gui.h"
+#include <stdlib.h>
 
 #define MAIN_MENU_NAME "main_menu"
 #define GAME_SESSION_NAME "game_session"
@@ -46,6 +47,7 @@ void switch_to_game_session(GtkWidget *btn, gpointer data)
     gtk_container_add(GTK_CONTAINER (game_session_view), game_area);
     gtk_widget_show_all(game_session_view);
   }
+  draw_game_state(game_state);
   switch_view(game_session_view);
   return;
 }
@@ -83,6 +85,13 @@ void handle_board_click(GtkWidget *btn, gpointer data)
     game_state = update_game_state(game_state, a);
   }
   draw_game_state(game_state);
+  
+  Player *p = malloc(sizeof(Player));
+  if (is_finished(game_state, &p)) {
+    game_ended_dialog(p);
+    clean_state();
+    switch_to_main_menu(NULL,NULL);
+  }
   return;
 }
   
@@ -185,6 +194,28 @@ void init_app()
   switch_view(main_menu_view);
   
   return;
+}
+
+void game_ended_dialog(Player *p) {
+  char msg[50];
+  if (p == NULL) sprintf(msg, "Draw");
+  else sprintf(msg, "Game won by player %s", *p == PlayerWhite ? PLAYER_WHITE_NAME : PLAYER_BLACK_NAME);
+  GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
+  GtkWidget *dialog;
+  dialog = gtk_message_dialog_new (GTK_WINDOW(window),
+                                   flags,
+                                   GTK_MESSAGE_ERROR,
+                                   GTK_BUTTONS_CLOSE,
+                                   msg);
+
+  // Destroy the dialog when the user responds to it
+  // (e.g. clicks a button)
+
+  g_signal_connect_swapped (dialog, "response",
+                            G_CALLBACK (gtk_widget_destroy),
+                            dialog);
+                            
+  gtk_dialog_run (GTK_DIALOG (dialog));
 }
 
 void signal_error(char *msg)
