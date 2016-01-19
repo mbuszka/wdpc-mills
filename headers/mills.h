@@ -17,7 +17,6 @@ typedef struct {
   Player    current_player;
   Point     board[24];
   Mill      mills[16];
-  short int links[24][4];
   short int men_count[2];
   short int available_men[2];
   Phase     phase;

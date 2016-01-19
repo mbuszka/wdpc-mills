@@ -1,5 +1,6 @@
 #include"gui.h"
 #include <stdlib.h>
+#include "utils.h"
 
 #define HISTORY_SIZE 100
 #define opponents_color(player) (player == PlayerBlack ? White : Black)
@@ -26,6 +27,7 @@ extern GameState game_state;
 static GameState game_history[HISTORY_SIZE];
 static int history_head = 0;
 static int history_count = 0;
+static short int links[24][4] = LINKS;
 
 GameState update_mill(GameState state, short int mill);
 GameState update_mills(GameState state, short int dest);
@@ -100,7 +102,7 @@ GameState update_game_state(GameState old_state, Action action)
       new_state.available_men[1] == 3)) {
     new_state.phase = Phase3;
   }
-  
+  g_print("%s\n", serialize_state(new_state));
   add_to_history(new_state);
   return new_state;
 }
@@ -111,7 +113,7 @@ bool has_legal_moves(GameState state, Player p)
     if (state.board[i] == (p == PlayerWhite ? White : Black)) {
       for (int j=0; j<4; j++) {
         int n=0;
-        if ((n = state.links[i][j]) >=0 && state.board[n] == Empty)
+        if ((n = links[i][j]) >=0 && state.board[n] == Empty)
           return true;
        }
     }
@@ -195,8 +197,8 @@ bool check_history_for_repeats()
 bool is_neighbour(GameState state, short int source, short int destination)
 {
   for (int i=0; i<4; i++) {
-    g_print("checking %d's neighbour %d\n", source, state.links[source][i]);
-    if (state.links[source][i] == destination) return true;
+    g_print("checking %d's neighbour %d\n", source, links[source][i]);
+    if (links[source][i] == destination) return true;
   }
   return false;
 }
@@ -235,7 +237,7 @@ bool is_mill_created(GameState old_state, GameState new_state, short int dest)
 
 GameState init_state()
 {
-  GameState state = { PlayerWhite, { Empty }, { None }, LINKS, {0,0}, { 4, 4 }, Phase1, false};
+  GameState state = { PlayerWhite, { Empty }, { None }, {0,0}, { 4, 4 }, Phase1, false};
   
   return state;
 }
