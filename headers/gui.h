@@ -1,5 +1,3 @@
-#include <gtk/gtk.h>
-#include "mills.h"
 #define PLAYER_WHITE_NAME "Red"
 #define PLAYER_BLACK_NAME "Blue"
 

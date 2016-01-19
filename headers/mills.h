@@ -25,6 +25,7 @@ typedef struct {
 
 GameState update_game_state(GameState old_state, Action action); // assumes action is valid
 bool is_valid_action(GameState state, Action action);
+void set_state(GameState state);
 GameState init_state();
 bool is_finished(GameState state, Player **winner);
 void clean_state();

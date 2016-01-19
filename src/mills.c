@@ -1,6 +1,9 @@
-#include"gui.h"
 #include <stdlib.h>
+#include <gtk/gtk.h>
+#include "mills.h"
+#include "gui.h"
 #include "utils.h"
+#include "concurrency.h"
 
 #define HISTORY_SIZE 100
 #define opponents_color(player) (player == PlayerBlack ? White : Black)
@@ -24,6 +27,8 @@ static short int points_in_mill[16][3] = {{0,1,2},    {3,4,5},    {6,7,8},    {9
                                           {16,19,22}, {8,12,17},  {5,13,20},  {2,14,23}};
 
 extern GameState game_state;
+extern Player me;
+extern PipesPtr fifo_pipes;
 static GameState game_history[HISTORY_SIZE];
 static int history_head = 0;
 static int history_count = 0;
@@ -103,7 +108,7 @@ GameState update_game_state(GameState old_state, Action action)
     new_state.phase = Phase3;
   }
   g_print("%s\n", serialize_state(new_state));
-  add_to_history(new_state);
+  send_string_to_pipe(fifo_pipes, serialize_state(new_state));
   return new_state;
 }
 
@@ -145,10 +150,26 @@ bool is_finished(GameState state, Player **winner)
   return false;
 }
 
+void set_state(GameState state)
+{
+  game_state = state;
+  add_to_history(state);
+  
+  Player *p = malloc(sizeof(Player));
+  if (is_finished(game_state, &p)) {
+    game_ended_dialog(p);
+    clean_state();
+    switch_to_main_menu(NULL,NULL);
+  }
+  
+  return;
+}
+
 bool is_valid_action(GameState state, Action action)
 {
   bool valid = true;
   Player cur_plr = state.current_player;
+  if (cur_plr != me) return false;
   switch (action.action_type) {
   case Move :   valid = !state.mill_created &&
                         ((state.phase == Phase3 && state.men_count[state.board[action.source] == White ? PlayerWhite : PlayerBlack] == 3) || 
@@ -237,7 +258,8 @@ bool is_mill_created(GameState old_state, GameState new_state, short int dest)
 
 GameState init_state()
 {
-  GameState state = { PlayerWhite, { Empty }, { None }, {0,0}, { 4, 4 }, Phase1, false};
+  GameState state =  { PlayerWhite, { Empty }, { None }, {0,0}, { 4, 4 }, Phase1, false};
+                  // deserialize_state("{\"current_player\":0,\"board\":[0,0,0,0,0,1,2,0,0,0,0,0,0,2,0,0,1,0,0,0,0,0,0,0],\"mills\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"men_count\":[2,2],\"available_men\":[4,4],\"phase\":0,\"mill_created\":false}");
   
   return state;
 }

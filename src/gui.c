@@ -1,6 +1,9 @@
 #include <gtk/gtk.h>
-#include "gui.h"
 #include <stdlib.h>
+#include "mills.h"
+#include "gui.h"
+#include "concurrency.h"
+#include "utils.h"
 
 #define MAIN_MENU_NAME "main_menu"
 #define GAME_SESSION_NAME "game_session"
@@ -10,9 +13,12 @@
 
 void build_game_area();
 void set_label(Player p);
+static gboolean get_state_from_other_player(gpointer data);
 
 extern GObject *window;
 extern GameState game_state;
+extern Player me;
+extern PipesPtr fifo_pipes;
 
 
 static GtkWidget *view_stack;
@@ -82,16 +88,10 @@ void handle_board_click(GtkWidget *btn, gpointer data)
     a.action_type = Remove;
   }
   if (is_valid_action(game_state, a)) {
-    game_state = update_game_state(game_state, a);
+    set_state(update_game_state(game_state, a));
   }
-  draw_game_state(game_state);
   
-  Player *p = malloc(sizeof(Player));
-  if (is_finished(game_state, &p)) {
-    game_ended_dialog(p);
-    clean_state();
-    switch_to_main_menu(NULL,NULL);
-  }
+  draw_game_state(game_state);
   return;
 }
   
@@ -192,6 +192,7 @@ void init_app()
   main_menu_view = GTK_WIDGET (gtk_builder_get_object(builder, MAIN_MENU_NAME));
   game_session_view = GTK_WIDGET (gtk_builder_get_object(builder, GAME_SESSION_NAME));
   switch_view(main_menu_view);
+  g_timeout_add(100, get_state_from_other_player, NULL);
   
   return;
 }
@@ -216,6 +217,18 @@ void game_ended_dialog(Player *p) {
                             dialog);
                             
   gtk_dialog_run (GTK_DIALOG (dialog));
+}
+
+static gboolean get_state_from_other_player(gpointer data)
+{
+  GameState state;
+  char str[1005];
+  if (get_string_from_pipe(fifo_pipes, str, 1000)) {
+    state = deserialize_state(str);
+    set_state(state);
+    draw_game_state(state);
+  }
+  return TRUE;
 }
 
 void signal_error(char *msg)
