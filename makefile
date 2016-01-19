@@ -8,10 +8,10 @@ SDIR = src
 
 LIBS=`pkg-config gtk+-3.0 --libs`
 
-_DEPS = utils.h mills.h gui.h
+_DEPS = utils.h mills.h gui.h json.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = main.o mills.o gui.o
+_OBJ = main.o mills.o gui.o utils.o json.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
