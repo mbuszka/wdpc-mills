@@ -9,6 +9,10 @@
     json_append_element(json_arr, buf); \
   }
 
+#define deserialize_arr(json_arr, arr, length) for (int i=0; i<length; i++) { \
+    arr[i] = (int) json_find_element(json_arr, i)->number_; \
+  }
+
 char *serialize_state(GameState state)
 {
   JsonNode *json = json_mkobject();
@@ -44,5 +48,29 @@ char *serialize_state(GameState state)
 
 GameState deserialize_state(char *json_str)
 {
-  JsonNode json = json_decode(json_str);
+  GameState state;
+  JsonNode *json = json_decode(json_str);
+  
+  JsonNode *current_player = json_find_member(json, "current_player");
+  state.current_player = (Point) current_player->number_;
+  
+  JsonNode *board = json_find_member(json, "board");
+  deserialize_arr(board, state.board, 24);
+  
+  JsonNode *mills = json_find_member(json, "mills");
+  deserialize_arr(mills, state.mills, 16);
+  
+  JsonNode *men_count = json_find_member(json, "men_count");
+  deserialize_arr(men_count, state.men_count, 2);
+  
+  JsonNode *available_men = json_find_member(json, "available_men");
+  deserialize_arr(available_men, state.available_men, 2);
+  
+  JsonNode *phase = json_find_member(json, "phase");
+  state.phase = (Phase) phase->number_;
+  
+  JsonNode *mill_created = json_find_member(json, "mill_created");
+  state.mill_created = mill_created->bool_;
+  
+  return state;
 }
