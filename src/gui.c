@@ -103,6 +103,7 @@ void set_label(Player p)
 
 void build_game_area()
 {
+  GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   GtkWidget *grid = gtk_grid_new();
   for (int i=0; i<24; i++) {
     board_tiles[i] = gtk_event_box_new();
@@ -127,31 +128,31 @@ void build_game_area()
   gtk_box_pack_start(GTK_BOX(scorebox), player_1_men_count_label, TRUE, TRUE, 0);
   gtk_box_pack_start(GTK_BOX(infobox), current_player_label, TRUE, TRUE, 0);
   gtk_box_pack_end(GTK_BOX(infobox), phase_indicator, TRUE, TRUE, 0);
-  gtk_grid_attach(GTK_GRID (grid), infobox, 0, 0, 7, 1);
-  
+  gtk_box_pack_start(GTK_BOX (box), infobox, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX (box), grid, FALSE, FALSE, 0);
+  gtk_box_pack_start(GTK_BOX (box), scorebox, FALSE, FALSE, 0);
   for (int i=0; i<7; i++) {
-    gtk_grid_attach(GTK_GRID (grid), i%3 == 0 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 1, 1, 1);
+    gtk_grid_attach(GTK_GRID (grid), i%3 == 0 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 0, 1, 1);
   }
   for (int i=0; i<7; i++) {
-    gtk_grid_attach(GTK_GRID (grid), i%2 == 1 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 2, 1, 1);
+    gtk_grid_attach(GTK_GRID (grid), i%2 == 1 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 1, 1, 1);
   }
   for (int i=0; i<7; i++) {
-    gtk_grid_attach(GTK_GRID (grid), i>1 && i<5 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 3, 1, 1);
+    gtk_grid_attach(GTK_GRID (grid), i>1 && i<5 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 2, 1, 1);
   }
   for (int i=0; i<7; i++) {
-    gtk_grid_attach(GTK_GRID (grid), i%7 != 3 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 4, 1, 1);
+    gtk_grid_attach(GTK_GRID (grid), i%7 != 3 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 3, 1, 1);
   }
   for (int i=0; i<7; i++) {
-    gtk_grid_attach(GTK_GRID (grid), i>1 && i<5 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 5, 1, 1);
+    gtk_grid_attach(GTK_GRID (grid), i>1 && i<5 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 4, 1, 1);
   }
   for (int i=0; i<7; i++) {
-    gtk_grid_attach(GTK_GRID (grid), i%2 == 1 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 6, 1, 1);
+    gtk_grid_attach(GTK_GRID (grid), i%2 == 1 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 5, 1, 1);
   }
   for (int i=0; i<7; i++) {
-    gtk_grid_attach(GTK_GRID (grid), i%3 == 0 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 7, 1, 1);
+    gtk_grid_attach(GTK_GRID (grid), i%3 == 0 ? board_tiles[tile_ctr++] : background_tiles[bgr_ctr++], i, 6, 1, 1);
   }
-  gtk_grid_attach(GTK_GRID (grid), scorebox, 0, 8, 7, 1);
-  game_area = grid;
+  game_area = box;
   return;
 }
 
@@ -183,6 +184,10 @@ void draw_game_state(GameState state)
 void init_app()
 { 
   GtkBuilder *builder;
+  GtkCssProvider *provider;
+  GdkDisplay *display;
+  GdkScreen *screen;
+  
   builder = gtk_builder_new();
   gtk_builder_add_from_file(builder, "gtk/layout.ui", NULL);
   window = gtk_builder_get_object (builder, "window");
@@ -193,6 +198,13 @@ void init_app()
   game_session_view = GTK_WIDGET (gtk_builder_get_object(builder, GAME_SESSION_NAME));
   switch_view(main_menu_view);
   g_timeout_add(100, get_state_from_other_player, NULL);
+  
+  display = gdk_display_get_default ();
+  screen = gdk_display_get_default_screen (display);
+  provider = gtk_css_provider_new();
+  gtk_css_provider_load_from_path(GTK_CSS_PROVIDER (provider), "res/style.css", NULL);
+  gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER (provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  g_object_unref(provider);
   
   return;
 }
