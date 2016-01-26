@@ -4,7 +4,10 @@ The Mills boardgame for university C course
 Installation
 ------------
 Clone the repository  
-`make`  
+```
+mkdir obj
+make
+```
 Usage
 --------
 `./mills player_nuber`  
