@@ -13,7 +13,7 @@
 
 void build_game_area();
 void set_label(Player p);
-static gboolean get_state_from_other_player(gpointer data);
+static gboolean get_action_from_other_player(gpointer data);
 
 extern GObject *window;
 extern GameState game_state;
@@ -87,8 +87,10 @@ void handle_board_click(GtkWidget *btn, gpointer data)
   } else {
     a.action_type = Remove;
   }
+  
   if (is_valid_action(game_state, a)) {
-    set_state(update_game_state(game_state, a));
+    send_string_to_pipe(fifo_pipes, serialize_action(a));
+    update_game_state(game_state, a);
   }
   
   draw_game_state(game_state);
@@ -97,7 +99,7 @@ void handle_board_click(GtkWidget *btn, gpointer data)
   
 void set_label(Player p)
 {
-  gtk_label_set_label(GTK_LABEL(current_player_label), p == PlayerWhite ? PLAYER_WHITE_NAME : PLAYER_BLACK_NAME);
+  gtk_label_set_label(GTK_LABEL(current_player_label), p == me ? "Your turn" : "Oponnent's turn");
   return;
 }
 
@@ -112,7 +114,7 @@ void build_game_area()
     gtk_container_add(GTK_CONTAINER (board_tiles[i]), img);
   }
   for (int i=0; i<25; i++) {
-    background_tiles[i] = gtk_image_new_from_file("res/background.png");
+    background_tiles[i] = gtk_image_new_from_file("res/empty.png");
   }
   int tile_ctr=0; int bgr_ctr=0;
   
@@ -168,8 +170,8 @@ void set_tile_image(short int tile, Point p)
 void draw_game_state(GameState state)
 {
   char msg1[50], msg2[50], phase[20];
-  sprintf(msg1, "Player %s men left: %d", PLAYER_WHITE_NAME, state.available_men[0]-state.men_count[0]);
-  sprintf(msg2, "Player %s men left: %d", PLAYER_BLACK_NAME, state.available_men[1]-state.men_count[1]);
+  sprintf(msg1, "Your men left: %d", state.available_men[me]-state.men_count[me]);
+  sprintf(msg2, "Opponent's men left: %d", state.available_men[(me+1)%2]-state.men_count[(me+1)%2]);
   sprintf(phase, "Phase %d", state.phase + 1);
   gtk_label_set_label(GTK_LABEL(player_1_men_count_label), msg1);
   gtk_label_set_label(GTK_LABEL(player_2_men_count_label), msg2);
@@ -191,13 +193,17 @@ void init_app()
   builder = gtk_builder_new();
   gtk_builder_add_from_file(builder, "gtk/layout.ui", NULL);
   window = gtk_builder_get_object (builder, "window");
+  char title[50];
+  sprintf(title, "Mills: player %s", me == PlayerWhite ? PLAYER_WHITE_NAME : PLAYER_BLACK_NAME);
+  
+  gtk_window_set_title(GTK_WINDOW(window), title); 
   
   gtk_builder_connect_signals(builder, NULL);
   view_stack = GTK_WIDGET (gtk_builder_get_object(builder, VIEW_STACK_NAME));
   main_menu_view = GTK_WIDGET (gtk_builder_get_object(builder, MAIN_MENU_NAME));
   game_session_view = GTK_WIDGET (gtk_builder_get_object(builder, GAME_SESSION_NAME));
   switch_view(main_menu_view);
-  g_timeout_add(100, get_state_from_other_player, NULL);
+  g_timeout_add(100, get_action_from_other_player, NULL);
   
   display = gdk_display_get_default ();
   screen = gdk_display_get_default_screen (display);
@@ -212,7 +218,7 @@ void init_app()
 void game_ended_dialog(Player *p) {
   char msg[50];
   if (p == NULL) sprintf(msg, "Draw");
-  else sprintf(msg, "Game won by player %s", *p == PlayerWhite ? PLAYER_WHITE_NAME : PLAYER_BLACK_NAME);
+  else sprintf(msg, *p == me ? "You won !" : "You lost !");
   GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
   GtkWidget *dialog;
   dialog = gtk_message_dialog_new (GTK_WINDOW(window),
@@ -229,16 +235,39 @@ void game_ended_dialog(Player *p) {
                             dialog);
                             
   gtk_dialog_run (GTK_DIALOG (dialog));
+  
+  clean_state();
+  switch_to_main_menu(NULL,NULL);
 }
 
-static gboolean get_state_from_other_player(gpointer data)
+void surrender(GtkWidget *btn, gpointer data)
 {
-  GameState state;
+  Action a = {Surrender, 0, 0};
+  send_string_to_pipe(fifo_pipes, serialize_action(a));
+  Player op = me == PlayerWhite ? PlayerBlack : PlayerWhite;
+  game_ended_dialog(&op);
+}
+
+void help_button_clicked(GtkWidget *btn, gpointer data)
+{
+  GdkDisplay *display = gdk_display_get_default ();
+  GdkScreen *screen = gdk_display_get_default_screen (display);
+  GFile *f = g_file_new_for_path("user_help.pdf");
+  gtk_show_uri(screen, g_file_get_uri(f), GDK_CURRENT_TIME, NULL);
+}
+
+static gboolean get_action_from_other_player(gpointer data)
+{
+  Action a;
   char str[1005];
   if (get_string_from_pipe(fifo_pipes, str, 1000)) {
-    state = deserialize_state(str);
-    set_state(state);
-    draw_game_state(state);
+    a = deserialize_action(str);
+    if (a.action_type == Surrender) {
+      game_ended_dialog(&me);
+    } else {
+      update_game_state(game_state, a);
+    }
+    draw_game_state(game_state);
   }
   return TRUE;
 }

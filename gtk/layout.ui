@@ -34,24 +34,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="load_game">
-                <property name="label" translatable="yes">load</property>
+              <object class="GtkButton" id="help2">
+                <property name="label" translatable="yes">help</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="options">
-                <property name="label" translatable="yes">options</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
+                <signal name="clicked" handler="help_button_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -81,9 +69,6 @@
           </packing>
         </child>
         <child>
-          <placeholder/>
-        </child>
-        <child>
           <object class="GtkBox" id="game_session">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
@@ -94,11 +79,12 @@
                 <property name="orientation">vertical</property>
                 <property name="homogeneous">True</property>
                 <child>
-                  <object class="GtkButton" id="button5">
-                    <property name="label" translatable="yes">button</property>
+                  <object class="GtkButton" id="surrender">
+                    <property name="label" translatable="yes">surrender</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <signal name="clicked" handler="surrender" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -107,11 +93,12 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="button6">
-                    <property name="label" translatable="yes">button</property>
+                  <object class="GtkButton" id="help1">
+                    <property name="label" translatable="yes">help</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <signal name="clicked" handler="help_button_clicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -147,7 +134,7 @@
           <packing>
             <property name="name">game_session</property>
             <property name="title" translatable="yes">game_session</property>
-            <property name="position">2</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>

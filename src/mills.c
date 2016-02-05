@@ -108,7 +108,8 @@ GameState update_game_state(GameState old_state, Action action)
     new_state.phase = Phase3;
   }
   g_print("%s\n", serialize_state(new_state));
-  send_string_to_pipe(fifo_pipes, serialize_state(new_state));
+  save_state(new_state);
+  
   return new_state;
 }
 
@@ -150,7 +151,7 @@ bool is_finished(GameState state, Player **winner)
   return false;
 }
 
-void set_state(GameState state)
+void save_state(GameState state)
 {
   game_state = state;
   add_to_history(state);
@@ -158,8 +159,6 @@ void set_state(GameState state)
   Player *p = malloc(sizeof(Player));
   if (is_finished(game_state, &p)) {
     game_ended_dialog(p);
-    clean_state();
-    switch_to_main_menu(NULL,NULL);
   }
   
   return;

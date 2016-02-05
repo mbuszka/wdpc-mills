@@ -43,6 +43,8 @@ char *serialize_state(GameState state)
   json_append_member(json, "mill_created", mill_created);
   
   char *out = json_encode(json);
+  json_delete(json);
+  
   return out;
 }
 
@@ -74,3 +76,34 @@ GameState deserialize_state(char *json_str)
   
   return state;
 }
+
+char *serialize_action(Action a)
+{
+  JsonNode *json = json_mkobject();
+  
+  JsonNode *a_type = json_mknumber((double) a.action_type);
+  JsonNode *src = json_mknumber((double) a.source);
+  JsonNode *dst = json_mknumber((double) a.destination);
+  
+  json_append_member(json, "action_type", a_type);
+  json_append_member(json, "source", src);
+  json_append_member(json, "destination", dst);
+  
+  char *out = json_encode(json);
+  json_delete(json);
+  
+  return out;
+}
+
+Action deserialize_action(char *str)
+{
+  Action a;
+  JsonNode *json = json_decode(str);
+  a.action_type = (ActionType) json_find_member(json, "action_type")->number_;
+  a.source = (int) json_find_member(json, "source")->number_;
+  a.destination = (int) json_find_member(json, "destination")->number_;
+  json_delete(json);
+  return a;
+}
+
+

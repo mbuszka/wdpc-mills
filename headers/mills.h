@@ -5,7 +5,7 @@ typedef enum {PlayerWhite, PlayerBlack} Player;
 typedef enum {Empty, White, Black} Point;
 typedef enum {None, Blacks, Whites} Mill;
 typedef enum {Phase1, Phase2, Phase3} Phase;
-typedef enum {Add, Remove, Move} ActionType;
+typedef enum {Add, Remove, Move, Surrender} ActionType;
 
 typedef struct {
   ActionType action_type;
@@ -25,7 +25,7 @@ typedef struct {
 
 GameState update_game_state(GameState old_state, Action action); // assumes action is valid
 bool is_valid_action(GameState state, Action action);
-void set_state(GameState state);
+void save_state(GameState state);
 GameState init_state();
 bool is_finished(GameState state, Player **winner);
 void clean_state();
