@@ -5,7 +5,6 @@ Installation
 ------------
 Clone the repository  
 ```
-mkdir obj
 make
 ```
 Usage
