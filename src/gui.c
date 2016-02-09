@@ -8,8 +8,8 @@
 #define MAIN_MENU_NAME "main_menu"
 #define GAME_SESSION_NAME "game_session"
 #define VIEW_STACK_NAME "view_stack"
-#define PLAYER_WHITE_NAME "Red"
-#define PLAYER_BLACK_NAME "Blue"
+#define PLAYER_WHITE_NAME "Czerwony"
+#define PLAYER_BLACK_NAME "Niebieski"
 
 void build_game_area();
 void set_label(Player p);
@@ -99,7 +99,7 @@ void handle_board_click(GtkWidget *btn, gpointer data)
   
 void set_label(Player p)
 {
-  gtk_label_set_label(GTK_LABEL(current_player_label), p == me ? "Your turn" : "Oponnent's turn");
+  gtk_label_set_label(GTK_LABEL(current_player_label), p == me ? "Twój ruch" : "Ruch przeciwnika");
   return;
 }
 
@@ -170,9 +170,9 @@ void set_tile_image(short int tile, Point p)
 void draw_game_state(GameState state)
 {
   char msg1[50], msg2[50], phase[20];
-  sprintf(msg1, "Your men left: %d", state.available_men[me]-state.men_count[me]);
-  sprintf(msg2, "Opponent's men left: %d", state.available_men[(me+1)%2]-state.men_count[(me+1)%2]);
-  sprintf(phase, "Phase %d", state.phase + 1);
+  sprintf(msg1, "Pozostałe pionki: %d", state.available_men[me]-state.men_count[me]);
+  sprintf(msg2, "Pozostałe pionki przeciwnika: %d", state.available_men[(me+1)%2]-state.men_count[(me+1)%2]);
+  sprintf(phase, "Faza %d", state.phase + 1);
   gtk_label_set_label(GTK_LABEL(player_1_men_count_label), msg1);
   gtk_label_set_label(GTK_LABEL(player_2_men_count_label), msg2);
   gtk_label_set_label(GTK_LABEL(phase_indicator), phase);
@@ -194,7 +194,7 @@ void init_app()
   gtk_builder_add_from_file(builder, "gtk/layout.ui", NULL);
   window = gtk_builder_get_object (builder, "window");
   char title[50];
-  sprintf(title, "Mills: player %s", me == PlayerWhite ? PLAYER_WHITE_NAME : PLAYER_BLACK_NAME);
+  sprintf(title, "Młynek, gracz %s", me == PlayerWhite ? PLAYER_WHITE_NAME : PLAYER_BLACK_NAME);
   
   gtk_window_set_title(GTK_WINDOW(window), title); 
   
@@ -218,7 +218,7 @@ void init_app()
 void game_ended_dialog(Player *p) {
   char msg[50];
   if (p == NULL) sprintf(msg, "Draw");
-  else sprintf(msg, *p == me ? "You won !" : "You lost !");
+  else sprintf(msg, *p == me ? "Wygrałeś !" : "Przegrałeś !");
   GtkDialogFlags flags = GTK_DIALOG_DESTROY_WITH_PARENT;
   GtkWidget *dialog;
   dialog = gtk_message_dialog_new (GTK_WINDOW(window),

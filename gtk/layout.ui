@@ -35,7 +35,7 @@
             </child>
             <child>
               <object class="GtkButton" id="help2">
-                <property name="label" translatable="yes">help</property>
+                <property name="label" translatable="yes">pomoc</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -49,7 +49,7 @@
             </child>
             <child>
               <object class="GtkButton" id="exit_app">
-                <property name="label" translatable="yes">exit</property>
+                <property name="label" translatable="yes">wyjście</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -80,7 +80,7 @@
                 <property name="homogeneous">True</property>
                 <child>
                   <object class="GtkButton" id="surrender">
-                    <property name="label" translatable="yes">surrender</property>
+                    <property name="label" translatable="yes">poddaj się</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
@@ -94,7 +94,7 @@
                 </child>
                 <child>
                   <object class="GtkButton" id="help1">
-                    <property name="label" translatable="yes">help</property>
+                    <property name="label" translatable="yes">pomoc</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
@@ -108,7 +108,7 @@
                 </child>
                 <child>
                   <object class="GtkButton" id="menu_return">
-                    <property name="label" translatable="yes">return to menu</property>
+                    <property name="label" translatable="yes">powrót</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>

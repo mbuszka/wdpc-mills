@@ -257,7 +257,7 @@ bool is_mill_created(GameState old_state, GameState new_state, short int dest)
 
 GameState init_state()
 {
-  GameState state =  { PlayerWhite, { Empty }, { None }, {0,0}, { 4, 4 }, Phase1, false};
+  GameState state =  { PlayerWhite, { Empty }, { None }, {0,0}, { 9, 9 }, Phase1, false};
                   // deserialize_state("{\"current_player\":0,\"board\":[0,0,0,0,0,1,2,0,0,0,0,0,0,2,0,0,1,0,0,0,0,0,0,0],\"mills\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"men_count\":[2,2],\"available_men\":[4,4],\"phase\":0,\"mill_created\":false}");
   
   return state;
